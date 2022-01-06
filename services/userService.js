@@ -10,6 +10,8 @@ module.exports = {
 };
 
 async function createUser(request, response, next) {
+  console.log("hitting createuser service",request.userName);
+
   const user = await User.findOne({ userName: request.userName });
   
   if (!user) {
@@ -24,7 +26,7 @@ async function createUser(request, response, next) {
           }).then(() => {
             response.status(200).json({
               message: "You have signed up successfully. Please sign in!!",
-              statusCode: 200,
+              status: 200
             });
           });
         }
@@ -53,6 +55,7 @@ async function getUser(request, response, next) {
           accessToken: token,
           user: user,
           userId: user._id.toString(),
+          status: 200
         });
       } else {
         response.status(401).send("Invalid Credentials! Please try again.");

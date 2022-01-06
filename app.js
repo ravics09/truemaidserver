@@ -18,6 +18,7 @@ app.use(express.urlencoded({limit: '30mb', extended: true}));
 
 
 app.use("/user", userRoute);
+// app.use("/user", require("./routers/userRouter"));
 
 app.listen(port, () => {
     console.log(`Server is running on port : ${port}`)
