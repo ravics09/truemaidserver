@@ -8,7 +8,7 @@ const User = require("./../models/userModel");
 module.exports = {
   createMaid,
   getMaid,
-  getAllMaid
+  getAllMaid,
 };
 
 async function createMaid(request, response, next) {
@@ -60,6 +60,7 @@ async function getMaid(request, response, next) {
 
 async function getAllMaid(request, response, next) {
   Maid.find()
+    .populate("otherDetails")
     .then((res) => {
       response.status(200).json({
         maidList: res,

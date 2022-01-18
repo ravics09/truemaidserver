@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
   fullName: {
     type: String,
-    trim: true,
+    trim: true
   },
   email: {
     type: String,
@@ -33,13 +33,15 @@ const UserSchema = new Schema({
     type: String,
     trim: true,
   },
-  state: {
+  stateInfo: {
     type: String,
     trim: true,
   },
   pincode: {
-    type: String,
+    type: Number,
     trim: true,
+    minLength: 6,
+    maxLength: 6
   },
   profilePhoto: {
     type: String,
@@ -52,6 +54,12 @@ const UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+});
+
+UserSchema.virtual("Maid", {
+  ref: "Maid",
+  localField: "_id",
+  foreignField: "otherDetails",
 });
 
 module.exports = mongoose.model("User", UserSchema);

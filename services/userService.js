@@ -2,18 +2,20 @@ require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const User = require('./../models/userModel');
+const User = require("./../models/userModel");
 
 module.exports = {
   createUser,
   getUser,
+  editProfile,
+  getProfile,
+  resetPassword,
+  uploadProfilePhoto
 };
 
 async function createUser(request, response, next) {
-  console.log("hitting createuser service",request.userName);
-
   const user = await User.findOne({ userName: request.userName });
-  
+
   if (!user) {
     if (request.userName && request.password) {
       bcrypt.hash(request.password, 12, (err, passwordHash) => {
@@ -26,7 +28,7 @@ async function createUser(request, response, next) {
           }).then(() => {
             response.status(200).json({
               message: "You have signed up successfully. Please sign in!!",
-              status: 200
+              status: 200,
             });
           });
         }
@@ -54,12 +56,85 @@ async function getUser(request, response, next) {
         response.status(200).json({
           accessToken: token,
           user: user,
-          userId: user._id.toString(),
-          status: 200
+          status: 200,
         });
       } else {
         response.status(401).send("Invalid Credentials! Please try again.");
       }
     });
   } else response.status(404).send("User Not Registered.");
+}
+
+async function getProfile(request, response, next) {
+  const user = await User.findById(request.params.id);
+  if (user) {
+    response.status(200).json({
+      user: user,
+    });
+  } else response.status(400).send("User Information Not Found");
+}
+
+async function editProfile(request, response, next) {
+  const user = await User.findById(request.params.id);
+  if (user) {
+    const updatedInfo = new User({
+      _id: request.params.id,
+      fullName: request.body.fullName,
+      email: request.body.email,
+      mobile: request.body.mobile,
+      city: request.body.city,
+      stateInfo: request.body.stateInfo,
+      pincode: request.body.pincode,
+    });
+
+    User.findByIdAndUpdate(request.params.id, updatedInfo, {
+      new: true,
+      runValidators: true,
+    }).then((dbUser) => {
+      response.status(200).json({
+        status: 200,
+        user: dbUser,
+      });
+    });
+  } else response.status(404).send("User Information Not Found.");
+}
+
+async function resetPassword(request, response, next) {
+  const user = await User.findById(request.params.id);
+  if (user) {
+    if (request.body.password) {
+      bcrypt.hash(request.body.password, 12, (err, passwordHash) => {
+        if (err) {
+          return response
+            .status(500)
+            .json({ message: "couldn't hash the password" });
+        } else if (passwordHash) {
+          user.hash = passwordHash;
+          user.save();
+          response.status(200).json({
+            message: "Password Updated successfully.",
+            status: 200,
+          });
+        }
+      });
+    }
+  } else return response.status(400).send("User doesn't exist.");
+}
+
+async function uploadProfilePhoto(request, response, next) {
+  const { id } = request.params;
+  
+  var profilePic = request.file.path;
+  User.findById(id, (err, data)=>{
+    data.profilePhoto = profilePic ? profilePic : data.profilePhoto;
+    data.save().then(doc=>{
+      response.status(200).json({
+        user: doc,
+        status: 200,
+      })
+    })
+    .catch(err=>{
+      response.json(err);
+    })
+  })
 }
