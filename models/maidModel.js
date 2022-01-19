@@ -3,12 +3,12 @@ const Schema = mongoose.Schema;
 
 const MaidSchema = new Schema(
   {
-    otherDetails: {
+    userInfo: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
     aadhar: {
-      type: String,
+      type: Number,
       trim: true,
       minLength: 10,
       maxLength: 10,

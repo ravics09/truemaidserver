@@ -9,6 +9,7 @@ userRoutes.put('/editprofile/:id', editProfile);
 userRoutes.get('/getprofile/:id', getProfile);
 userRoutes.put('/resetpassword/:id', resetPassword);
 userRoutes.put('/uploadprofilephoto/:id', Upload.single("photo"), uploadProfilePhoto);
+userRoutes.put('/editmaidinfo/:id', editProfile);
 
 function signUp(request, response, next) {
     userServices.createUser(request.body, response, next);

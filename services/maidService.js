@@ -1,19 +1,50 @@
 require("dotenv").config();
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 
 const Maid = require("./../models/maidModel");
 const User = require("./../models/userModel");
 
 module.exports = {
   createMaid,
+  editMaid,
   getMaid,
   getAllMaid,
 };
 
 async function createMaid(request, response, next) {
+  var ObjectId = require("mongoose").Types.ObjectId;
+  const maid = await Maid.find({ userInfo: new ObjectId(request.params.id) });
+  const user = await User.findById(request.params.id);
+  console.log("maid after search ", maid);
+
+  if (maid.length == 0) {
+    console.log("New maid information Added");
+
+    Maid.create({
+      userInfo: request.params.id,
+      aadhar: request.body.aadhar,
+      experience: request.body.experience,
+      field: request.body.field,
+      salary: request.body.salary,
+      reference: request.body.reference,
+      availabilityDate: request.body.availabilityDate,
+      languages: request.body.languages,
+    }).then((res) => {
+      console.log("maidID", res._id);
+      user.isMaid = true;
+      user.maidId = res._id;
+      user.save();
+
+      response.status(200).json({
+        status: 200,
+        maid: res,
+      });
+    });
+  }
+}
+
+async function editMaid(request, response, next) {
+  const maid = await Maid.findById(request.params.id);
   const {
-    userId,
     aadhar,
     experience,
     field,
@@ -22,33 +53,47 @@ async function createMaid(request, response, next) {
     availabilityDate,
     languages,
   } = request.body;
-  const maid = new Maid({
-    otherDetails: userId,
-    aadhar: aadhar,
-    experience: experience,
-    field: field,
-    salary: salary,
-    reference: reference,
-    availabilityDate: availabilityDate,
-    languages: languages,
-  });
+  console.log("maid after search ", maid);
 
-  maid.save().then(() => {
-    response.status(200).json({
-      message: "Maid information is saved successfully",
-      statusCode: 200,
-    });
-  });
+  if (maid) {
+    console.log("Old maid exist");
+    Maid.findByIdAndUpdate(
+      request.params.id,
+      { runValidators: true },
+      (err, data) => {
+        (data.aadhar = aadhar ? aadhar : data.aadhar),
+          (data.experience = experience ? experience : data.experience),
+          (data.field = field ? field : data.field),
+          (data.salary = salary ? salary : data.salary),
+          (data.reference = reference ? reference : data.reference),
+          (data.availabilityDate = availabilityDate
+            ? availabilityDate
+            : data.availabilityDate),
+          (data.languages = languages ? languages : data.languages),
+          data
+            .save()
+            .then((doc) => {
+              console.log("sending updated maid data as===", doc);
+              response.status(200).json({
+                maid: doc,
+                status: 200,
+              });
+            })
+            .catch((err) => {
+              response.json(err);
+            });
+      }
+    );
+  }
 }
 
 async function getMaid(request, response, next) {
-  const { id } = request.params;
-  Maid.findById({ _id: id })
-    .populate("otherDetails")
-    // .populate("comments.postedBy")
+  Maid.findById(request.params.id)
+    .populate("userInfo")
     .then((res) => {
       response.status(200).json({
-        maidDetail: res,
+        maid: res,
+        status: 200,
       });
     })
     .catch((error) => {
@@ -60,10 +105,11 @@ async function getMaid(request, response, next) {
 
 async function getAllMaid(request, response, next) {
   Maid.find()
-    .populate("otherDetails")
+    .populate("userInfo")
     .then((res) => {
       response.status(200).json({
-        maidList: res,
+        maids: res,
+        status: 200,
       });
     })
     .catch((error) => {
