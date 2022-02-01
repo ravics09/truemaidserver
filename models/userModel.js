@@ -46,6 +46,11 @@ const UserSchema = new Schema({
   profilePhoto: {
     type: String,
   },
+  listedMaid: [
+    {
+      maidId: String,
+    }
+  ],
   hash: {
     type: String,
     required: true,

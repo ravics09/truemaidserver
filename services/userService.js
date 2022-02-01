@@ -10,7 +10,8 @@ module.exports = {
   editProfile,
   getProfile,
   resetPassword,
-  uploadProfilePhoto
+  uploadProfilePhoto,
+  addToListedMaid,
 };
 
 async function createUser(request, response, next) {
@@ -123,18 +124,51 @@ async function resetPassword(request, response, next) {
 
 async function uploadProfilePhoto(request, response, next) {
   const { id } = request.params;
-  
+
   var profilePic = request.file.path;
-  User.findById(id, (err, data)=>{
+  User.findById(id, (err, data) => {
     data.profilePhoto = profilePic ? profilePic : data.profilePhoto;
-    data.save().then(doc=>{
-      response.status(200).json({
-        user: doc,
-        status: 200,
+    data
+      .save()
+      .then((doc) => {
+        response.status(200).json({
+          user: doc,
+          status: 200,
+        });
       })
-    })
-    .catch(err=>{
-      response.json(err);
-    })
-  })
+      .catch((err) => {
+        response.json(err);
+      });
+  });
+}
+
+async function addToListedMaid(request, response) {
+  const { id } = request.params;
+  const { maidId } = request.body;
+
+  const user = await User.findById(id);
+  const listedOne = await User.find({"listedMaid.maidId": maidId});
+  
+  if (user && listedOne.length===0) {
+    const newItem = {
+      maidId: maidId,
+    };
+
+    const updateListedMaid = {
+      $push: { listedMaid: newItem }
+    };
+
+    User.findByIdAndUpdate(id, updateListedMaid, {
+      new: true,
+      runValidators: true,
+    }).then((res) => {
+      response.status(200).json({
+        message: "Maid Added To Listed Section!",
+        user: res,
+        status: 200,
+      });
+    });
+  } else {
+    response.status(400).send("Maid Already added!");
+  }
 }
