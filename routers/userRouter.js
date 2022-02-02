@@ -11,6 +11,7 @@ userRoutes.put('/resetpassword/:id', resetPassword);
 userRoutes.put('/uploadprofilephoto/:id', Upload.single("photo"), uploadProfilePhoto);
 userRoutes.put('/editmaidinfo/:id', editProfile);
 userRoutes.put('/addtolistedmaid/:id', addToListedMaid);
+userRoutes.put('/removefromlistedmaid/:id', removeFromListedMaid);
 
 function signUp(request, response, next) {
     userServices.createUser(request.body, response, next);
@@ -38,6 +39,10 @@ function uploadProfilePhoto(request, response, next) {
 
 function addToListedMaid(request, response, next) {
     userServices.addToListedMaid(request, response, next);
+};
+
+function removeFromListedMaid(request, response, next) {
+    userServices.removeFromListedMaid(request, response, next);
 };
 
 

@@ -49,6 +49,8 @@ const UserSchema = new Schema({
   listedMaid: [
     {
       maidId: String,
+      maidName: String,
+      maidSalary: String,
     }
   ],
   hash: {

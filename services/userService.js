@@ -12,6 +12,7 @@ module.exports = {
   resetPassword,
   uploadProfilePhoto,
   addToListedMaid,
+  removeFromListedMaid,
 };
 
 async function createUser(request, response, next) {
@@ -144,18 +145,20 @@ async function uploadProfilePhoto(request, response, next) {
 
 async function addToListedMaid(request, response) {
   const { id } = request.params;
-  const { maidId } = request.body;
+  const { maidId, maidName, maidSalary } = request.body;
 
   const user = await User.findById(id);
-  const listedOne = await User.find({"listedMaid.maidId": maidId});
-  
-  if (user && listedOne.length===0) {
+  const listedOne = await User.find({ "listedMaid.maidId": maidId });
+
+  if (user && listedOne.length === 0) {
     const newItem = {
       maidId: maidId,
+      maidName: maidName,
+      maidSalary: maidSalary,
     };
 
     const updateListedMaid = {
-      $push: { listedMaid: newItem }
+      $push: { listedMaid: newItem },
     };
 
     User.findByIdAndUpdate(id, updateListedMaid, {
@@ -170,5 +173,32 @@ async function addToListedMaid(request, response) {
     });
   } else {
     response.status(400).send("Maid Already added!");
+  }
+}
+
+async function removeFromListedMaid(request, response) {
+  const { id } = request.params;
+  const { maid_Id } = request.body;
+  const listedOne = await User.find({ "listedMaid._id": maid_Id });
+
+  if (listedOne.length > 0) {
+    User.findByIdAndUpdate(
+      id,
+      {
+        $pull: { listedMaid: { _id: maid_Id } },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).then((res) => {
+      response.status(200).json({
+        message: "Maid Successfully Removed From The List!",
+        user: res,
+        status: 200,
+      });
+    });
+  } else {
+    response.status(400).send("Maid Not Exist In The List");
   }
 }
